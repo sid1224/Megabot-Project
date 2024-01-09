@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #2c3e50, #1a1a1a);
+            font-family: 'Quicksand', sans-serif;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #3498db;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        form {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+            background-color: #34495e;
+            color: #ffffff;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: #ffffff;
+            cursor: pointer;
+        }
+         #speechRecognitionButton {
+            background-color: #2ecc71;
+        }
+        #chat-container {
+             max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .user-message,
+        .assistant-message {
+            background-color: #3498db;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 70%;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chatbot</h1>
+    <div id="chat-container">
+    {% for message in messages %}
+        {% if message.role == 'user' %}
+            <p>User: {{ message.content }}</p>
+        {% elif message.role == 'assistant' %}
+            <p>Assistant: {{ message.content }}</p>
+            <button onclick="speak('{{ message.content }}')">Speak</button>
+            <button id="speechRecognitionButton" onclick="startSpeechRecognition()">Speech Recognition</button>
+        {% endif %}
+    {% endfor %}
+    </div>
+    {% if messages|length > 1 and messages[1].role == 'user' %}
+        <form action="/chat" method="post">
+            <input type="hidden" name="system_msg" value="{{ messages[0].content }}">
+            <input type="hidden" name="category" value="{{ messages[1].content }}">
+            <input type="text" name="message" placeholder="Type your message...">
+            <input type="text" name="feedback" placeholder="Give feedback...">
+            <button type="submit">Send</button>
+        </form>
+    {% endif %}
+    <script>
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+            synth.speak(utterance);
+        }
+
+        function startSpeechRecognition() {
+            const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.querySelector('input[name="message"]').value = transcript;
+            };
+
+            recognition.start();
+        }
+    </script>
+</body>
+</html>
